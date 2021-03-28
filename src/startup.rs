@@ -1,5 +1,4 @@
 /// This is an analog on C's crt0
-
 use crate::main;
 use core::ptr;
 
@@ -260,7 +259,6 @@ static VECTOR_TABLE: [Vector; 85] = [
 
 #[no_mangle]
 extern "C" fn reset_handler() {
-
     // extern symbols from the linker script
     extern "C" {
         static mut _sbss: u8;
