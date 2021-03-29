@@ -19,8 +19,8 @@ fn panic_handler(_: &PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-    let mut rcc = unsafe { peripheral::PERIPHERALS.take_rcc() };
-    rcc.io_a_clk_enable().io_b_clk_enable().io_c_clk_enable();
+    let mut peripheral = peripheral::take();
+    peripheral.RCC.enable_io_c_clock();
 
     unsafe {
         *GPIOC_CRH &= 0xFF0FFFFF;

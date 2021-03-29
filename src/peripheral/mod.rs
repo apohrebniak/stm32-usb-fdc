@@ -4,7 +4,7 @@ use crate::peripheral::rcc::Rcc;
 use core::mem::replace;
 use core::ptr;
 
-pub(crate) static mut PERIPHERALS: Peripherals = Peripherals::new();
+static mut PERIPHERAL: Option<Peripheral> = Some(Peripheral::new());
 
 /// Wrapper around a memory location
 struct Register(*const usize);
@@ -22,19 +22,18 @@ impl Register {
 }
 
 /// Wrapper around all controller's peripherals
-pub(crate) struct Peripherals {
-    rcc: Option<Rcc>,
+#[allow(non_snake_case)]
+pub(crate) struct Peripheral {
+    pub(crate) RCC: Rcc,
 }
 
-impl Peripherals {
-    const fn new() -> Peripherals {
-        Peripherals {
-            rcc: Some(Rcc::new()),
-        }
+impl Peripheral {
+    const fn new() -> Peripheral {
+        Peripheral { RCC: Rcc::new() }
     }
+}
 
-    pub(crate) fn take_rcc(&mut self) -> Rcc {
-        let rcc_op = replace(&mut self.rcc, None);
-        rcc_op.unwrap()
-    }
+pub(crate) fn take() -> Peripheral {
+    let p = unsafe { replace(&mut PERIPHERAL, None) };
+    p.unwrap()
 }

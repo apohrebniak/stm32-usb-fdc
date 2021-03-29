@@ -50,18 +50,15 @@ impl Rcc {
         }
     }
 
-    pub(crate) fn io_c_clk_enable(mut self) -> Rcc {
+    pub(crate) fn enable_io_c_clock(&mut self) {
         self.apb2_clk_en.or(IOPCEN);
-        self
     }
 
-    pub(crate) fn io_b_clk_enable(mut self) -> Rcc {
+    pub(crate) fn enable_io_b_clock(&mut self) {
         self.apb2_clk_en.or(IOPBEN);
-        self
     }
 
-    pub(crate) fn io_a_clk_enable(mut self) -> Rcc {
+    pub(crate) fn enable_io_a_clock(&mut self) {
         self.apb2_clk_en.or(IOPAEN);
-        self
     }
 }
