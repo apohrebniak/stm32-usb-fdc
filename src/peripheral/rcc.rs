@@ -16,9 +16,9 @@ const RCC_BDCR: usize = RCC_ORIGIN + 0x20;
 const RCC_CSR: usize = RCC_ORIGIN + 0x24;
 
 //
-const IOPCEN: usize = 1 << 4;
-const IOPBEN: usize = 1 << 3;
-const IOPAEN: usize = 1 << 2;
+const IOPCEN: u32 = 1 << 4;
+const IOPBEN: u32 = 1 << 3;
+const IOPAEN: u32 = 1 << 2;
 
 /// Reset and clock control
 pub(crate) struct Rcc {

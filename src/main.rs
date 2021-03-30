@@ -22,20 +22,15 @@ fn main() -> ! {
     let mut peripheral = peripheral::take();
     peripheral.RCC.enable_io_c_clock();
 
-    unsafe {
-        *GPIOC_CRH &= 0xFF0FFFFF;
-        *GPIOC_CRH |= 0x00200000;
+    let mut gpioc = peripheral.GPIOC;
+    let mut pc13 = gpioc.p13.into_push_pull_output(gpioc.crh);
 
-        *GPIOC_ODR &= !GPIOC13;
-    }
     loop {
-        unsafe {
-            *GPIOC_ODR |= GPIOC13;
-        }
+        pc13.set_low();
+
         busy_wait(100000);
-        unsafe {
-            *GPIOC_ODR &= !GPIOC13;
-        }
+        pc13.set_high();
+
         busy_wait(100000);
     }
 }
