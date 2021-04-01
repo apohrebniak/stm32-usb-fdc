@@ -6,6 +6,7 @@
 use core::mem::replace;
 use core::panic::PanicInfo;
 use crate::peripheral::gpio::OutputPin;
+use crate::peripheral::Register;
 
 mod peripheral;
 mod startup;
@@ -23,6 +24,7 @@ fn panic_handler(_: &PanicInfo) -> ! {
 #[no_mangle]
 fn main() -> ! {
     let mut peripheral = peripheral::take();
+    peripheral.RCC.enable_io_a_clock();
     peripheral.RCC.enable_io_c_clock();
 
     let mut gpio = peripheral.GPIO;
@@ -30,11 +32,15 @@ fn main() -> ! {
     let mut pc13 = pc13.into_intput();
     let mut pc13 = pc13.into_push_pull_output(gpio.crh);
 
+    let mut pa0 = gpio.pa0.into_push_pull_output(Register(0x40010800 as *const usize));
+
     loop {
         pc13.set_low();
+        pa0.set_high();
 
         busy_wait(100000);
         pc13.set_high();
+        pa0.set_low();
 
         busy_wait(100000);
     }
