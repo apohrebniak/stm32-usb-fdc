@@ -9,6 +9,7 @@ use core::ptr;
 static mut PERIPHERAL: Option<Peripheral> = Some(Peripheral::new());
 
 /// Wrapper around a memory location
+#[derive(Copy, Clone)]
 pub struct Register(*const usize);
 
 impl Register {
