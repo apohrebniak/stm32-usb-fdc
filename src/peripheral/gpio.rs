@@ -6,9 +6,15 @@ const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
 
+pub trait RegisterAware {
+    const BSRR: Register;
+}
+
 pub struct PortA {}
 pub struct PortB {}
 pub struct PortC {}
+
+impl RegisterAware for PortC{ const BSRR: Register = Register(GPIOC_BSRR as *const usize); }
 
 pub struct Input {}
 pub struct Output {}
@@ -23,16 +29,12 @@ pub trait OutputPin {
     fn set_low(&mut self);
 }
 
-trait PortAware {
-    const BSRR: Register;
-}
-
 pub struct Pin<MODE, PORT, const INDEX: u8> {
     _marker_mode: PhantomData<MODE>,
     _marker_port: PhantomData<PORT>
 }
 
-impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX> {
+impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX> where PORT: RegisterAware {
 
     const fn new() -> Self {
         Self { _marker_mode: PhantomData, _marker_port: PhantomData }
@@ -48,7 +50,7 @@ impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX> {
         let cr_offset: u32 = (4 * INDEX as u32) % 32;
 
         // reset pin
-        // <Self as PortAware>::BSRR.write(1 << (16 + INDEX));
+        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
 
         // clear previous configuration for this pin. then set the new one
         cr.write(cr.bits() & !(0b1111 << cr_offset) | BITS << cr_offset);
@@ -62,21 +64,15 @@ impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX> {
 
 }
 
-impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
+impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> where PORT: RegisterAware {
     fn set_high(&mut self) {
-        // self.bsrr().write(1 << INDEX);
+        <PORT as RegisterAware>::BSRR.write(1 << INDEX);
     }
 
     fn set_low(&mut self) {
-        // self.bsrr().write(1 << (16 + INDEX));
+        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
     }
 }
-
-
-impl<MODE, const INDEX: u8> PortAware for Pin<MODE, PortC, INDEX> {
-    const BSRR: Register = Register(GPIOC_BSRR as *const usize);
-}
-
 
 pub struct GPIO {
     pub crl: Register,
