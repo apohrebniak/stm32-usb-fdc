@@ -1,4 +1,5 @@
 #![feature(const_generics)]
+#![feature(const_fn)]
 #![no_std]
 #![no_main]
 
