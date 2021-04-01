@@ -3,18 +3,13 @@
 #![no_std]
 #![no_main]
 
-use core::mem::replace;
-use core::panic::PanicInfo;
 use crate::peripheral::gpio::OutputPin;
 use crate::peripheral::Register;
+use core::mem::replace;
+use core::panic::PanicInfo;
 
 mod peripheral;
 mod startup;
-
-const GPIOC_CRH: *mut usize = 0x40011004 as *mut usize;
-const GPIOC_ODR: *mut usize = 0x4001100C as *mut usize;
-
-const GPIOC13: usize = 1 << 13;
 
 #[panic_handler]
 fn panic_handler(_: &PanicInfo) -> ! {
@@ -25,24 +20,39 @@ fn panic_handler(_: &PanicInfo) -> ! {
 fn main() -> ! {
     let mut peripheral = peripheral::take();
     peripheral.RCC.enable_io_a_clock();
+    peripheral.RCC.enable_io_b_clock();
     peripheral.RCC.enable_io_c_clock();
 
     let mut gpio = peripheral.GPIO;
-    let mut pc13 = gpio.pc13.into_push_pull_output(gpio.crh);
-    let mut pc13 = pc13.into_intput();
-    let mut pc13 = pc13.into_push_pull_output(gpio.crh);
+    let mut pb0 = gpio.pb0.into_push_pull_output();
+    let mut pa0 = gpio.pa0.into_push_pull_output();
+    let mut pc13 = gpio.pc13.into_push_pull_output();
 
-    let mut pa0 = gpio.pa0.into_push_pull_output(Register(0x40010800 as *const usize));
+    let mut turn_on = true;
 
     loop {
-        pc13.set_low();
-        pa0.set_high();
-
+        if turn_on {
+            pb0.set_high()
+        } else {
+            pb0.set_low()
+        };
         busy_wait(100000);
-        pc13.set_high();
-        pa0.set_low();
 
+        if turn_on {
+            pa0.set_high()
+        } else {
+            pa0.set_low()
+        };
         busy_wait(100000);
+
+        if turn_on {
+            pc13.set_high()
+        } else {
+            pc13.set_low()
+        };
+        busy_wait(100000);
+
+        turn_on = !turn_on;
     }
 }
 
