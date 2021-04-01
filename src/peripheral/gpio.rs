@@ -19,6 +19,10 @@ pub trait OutputPin {
     fn set_low(&mut self);
 }
 
+trait PortAware {
+    const BSRR: Register;
+}
+
 pub struct Pin<MODE, const PORT: char, const INDEX: u8> {
     _marker: PhantomData<MODE>
 }
@@ -39,7 +43,7 @@ impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
         let cr_offset: u32 = (4 * INDEX as u32) % 32;
 
         // reset pin
-        GPIO::bsrr().write(1 << (16 + INDEX));
+        <Self as PortAware>::BSRR.write(1 << (16 + INDEX));
 
         // clear previous configuration for this pin. then set the new one
         cr.write(cr.bits() & !(0b1111 << cr_offset) | BITS << cr_offset);
@@ -51,11 +55,11 @@ impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
 
 impl<const PORT: char, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
     fn set_high(&mut self) {
-        GPIO::bsrr().write(1 << INDEX);
+        // self.bsrr().write(1 << INDEX);
     }
 
     fn set_low(&mut self) {
-        GPIO::bsrr().write(1 << (16 + INDEX));
+        // self.bsrr().write(1 << (16 + INDEX));
     }
 }
 
@@ -75,12 +79,15 @@ impl GPIO {
     }
 }
 
-impl GPIO {
-    const fn bsrr() -> Register {
-        Register(GPIOC_BSRR as *const usize)
-    }
-
-    // const fn idr() -> Register {
-    //
-    // }
+impl<MODE, const INDEX: u8> PortAware for Pin<MODE, 'c', INDEX> {
+    const BSRR: Register = Register(GPIOC_BSRR as *const usize);
 }
+
+// impl GPIO {
+//
+//
+//     fn bsrr<const PORT: char>()  -> Register  {
+//         Register(GPIOC_BSRR as *const usize)
+//     }
+//
+// }
