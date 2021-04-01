@@ -1,77 +1,81 @@
 use crate::peripheral::Register;
+use core::marker::PhantomData;
 
 const GPIOC_ORIGIN: usize = 0x40011000;
 const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
-// const GPIOC_ODR: usize = GPIOC_ORIGIN + 0x0C;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
 
-pub(crate) enum State {
-    Low,
-    High,
+pub struct Input {}
+pub struct Output {}
+
+pub trait InputPin {
+    fn is_high(&self);
+    fn is_low(&self);
 }
 
-pub(crate) struct Pc13 {}
+pub trait OutputPin {
+    fn set_high(&mut self);
+    fn set_low(&mut self);
+}
 
-impl Pc13 {
-    pub(crate) fn set_low(&mut self) {
-        self.set_state(State::Low);
+pub struct Pin<MODE, const PORT: char, const INDEX: u8> {
+    _marker: PhantomData<MODE>
+}
+
+impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
+
+    const fn new() -> Self {
+        Self { _marker: PhantomData }
     }
 
-    pub(crate) fn set_high(&mut self) {
-        self.set_state(State::High);
-    }
-
-    pub(crate) fn set_state(&mut self, state: State) {
-        match state {
-            State::Low => GPIOC::bsrr().write(1 << (16 + 13)),
-            State::High => GPIOC::bsrr().write(1 << 13),
-        }
-    }
-
-    // pub(crate)fn read_state(&self) -> State {
-    //
-    // }
-
-    pub(crate) fn into_push_pull_output(self, cr: Register) -> Pc13 {
-        const CR_OFFSET: u32 = (4 * 13) % 32;
+    pub fn into_push_pull_output(self, cr: Register) -> Pin<Output, PORT, INDEX> {
         const CNF: u32 = 0b00;
         // default speed 2MHZ
         const MODE: u32 = 0b10;
         // bits to set
         const BITS: u32 = (CNF << 2) | MODE;
 
+        let cr_offset: u32 = (4 * INDEX as u32) % 32;
+
         // reset pin
-        GPIOC::bsrr().write(1 << (16 + 13));
+        GPIO::bsrr().write(1 << (16 + INDEX));
 
         // clear previous configuration for this pin. then set the new one
-        cr.write(cr.bits() & !(0b1111 << CR_OFFSET) | BITS << CR_OFFSET);
+        cr.write(cr.bits() & !(0b1111 << cr_offset) | BITS << cr_offset);
 
-        Pc13 {}
+        Pin::new()
     }
 
-    // pub(crate)fn set_speed(self) -> Pc13 {
-    //
-    // }
 }
 
-pub(crate) struct GPIOC {
-    pub(crate) crl: Register,
-    pub(crate) crh: Register,
-    pub(crate) p13: Pc13,
+impl<const PORT: char, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
+    fn set_high(&mut self) {
+        GPIO::bsrr().write(1 << INDEX);
+    }
+
+    fn set_low(&mut self) {
+        GPIO::bsrr().write(1 << (16 + INDEX));
+    }
 }
 
-impl GPIOC {
-    pub(in crate::peripheral) const fn new() -> GPIOC {
-        GPIOC {
+pub struct GPIO {
+    pub crl: Register,
+    pub crh: Register,
+    pub pc13: Pin<Input, 'c', 13>,
+}
+
+impl GPIO {
+    pub(in crate::peripheral) const fn new() -> GPIO {
+        GPIO {
             crl: Register(GPIOC_CRL as *const usize),
             crh: Register(GPIOC_CRH as *const usize),
-            p13: Pc13 {},
+            pc13: Pin::new(),
         }
     }
 }
 
-impl GPIOC {
+impl GPIO {
     const fn bsrr() -> Register {
         Register(GPIOC_BSRR as *const usize)
     }

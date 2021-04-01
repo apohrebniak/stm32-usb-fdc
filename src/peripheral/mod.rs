@@ -1,7 +1,7 @@
-mod gpio;
+pub(crate) mod gpio;
 mod rcc;
 
-use crate::peripheral::gpio::GPIOC;
+use crate::peripheral::gpio::GPIO;
 use crate::peripheral::rcc::Rcc;
 use core::mem::replace;
 use core::ptr;
@@ -9,9 +9,17 @@ use core::ptr;
 static mut PERIPHERAL: Option<Peripheral> = Some(Peripheral::new());
 
 /// Wrapper around a memory location
-pub(crate) struct Register(*const usize);
+pub struct Register(*const usize);
 
 impl Register {
+    fn write_memory_location(addr: usize, val: u32) {
+        unsafe { *(addr as *mut usize) = val as usize }
+    }
+
+    fn read_memory_location(addr: usize) -> u32 {
+        unsafe { *(addr as *const u32) }
+    }
+
     /// Combines the "val" with the existing value using OR
     fn or(&mut self, val: u32) {
         unsafe { *(self.0 as *mut u32) |= val }
@@ -29,21 +37,21 @@ impl Register {
 
 /// Wrapper around all controller's peripherals
 #[allow(non_snake_case)]
-pub(crate) struct Peripheral {
-    pub(crate) RCC: Rcc,
-    pub(crate) GPIOC: GPIOC,
+pub struct Peripheral {
+    pub RCC: Rcc,
+    pub GPIO: GPIO,
 }
 
 impl Peripheral {
     const fn new() -> Peripheral {
         Peripheral {
             RCC: Rcc::new(),
-            GPIOC: GPIOC::new(),
+            GPIO: GPIO::new(),
         }
     }
 }
 
-pub(crate) fn take() -> Peripheral {
+pub fn take() -> Peripheral {
     let p = unsafe { replace(&mut PERIPHERAL, None) };
     p.unwrap()
 }
