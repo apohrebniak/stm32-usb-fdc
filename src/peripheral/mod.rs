@@ -10,17 +10,9 @@ static mut PERIPHERAL: Option<Peripheral> = Some(Peripheral::new());
 
 /// Wrapper around a memory location
 #[derive(Copy, Clone)]
-pub struct Register(*const usize);
+pub struct Register(pub *const usize); //TODO: make private field
 
 impl Register {
-    fn write_memory_location(addr: usize, val: u32) {
-        unsafe { *(addr as *mut usize) = val as usize }
-    }
-
-    fn read_memory_location(addr: usize) -> u32 {
-        unsafe { *(addr as *const u32) }
-    }
-
     /// Combines the "val" with the existing value using OR
     fn or(&mut self, val: u32) {
         unsafe { *(self.0 as *mut u32) |= val }

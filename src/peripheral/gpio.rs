@@ -1,6 +1,11 @@
 use crate::peripheral::Register;
 use core::marker::PhantomData;
 
+const GPIOA_ORIGIN: usize = 0x40010800;
+const GPIOA_CRL: usize = GPIOA_ORIGIN;
+const GPIOA_CRH: usize = GPIOA_ORIGIN + 0x04;
+const GPIOA_BSRR: usize = GPIOA_ORIGIN + 0x10;
+
 const GPIOC_ORIGIN: usize = 0x40011000;
 const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
@@ -14,6 +19,7 @@ pub struct PortA {}
 pub struct PortB {}
 pub struct PortC {}
 
+impl RegisterAware for PortA{ const BSRR: Register = Register(GPIOA_BSRR as *const usize); }
 impl RegisterAware for PortC{ const BSRR: Register = Register(GPIOC_BSRR as *const usize); }
 
 pub struct Input {}
@@ -77,6 +83,7 @@ impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> where PORT: R
 pub struct GPIO {
     pub crl: Register,
     pub crh: Register,
+    pub pa0: Pin<Input, PortA, 0>,
     pub pc13: Pin<Input, PortC, 13>,
 }
 
@@ -85,16 +92,8 @@ impl GPIO {
         GPIO {
             crl: Register(GPIOC_CRL as *const usize),
             crh: Register(GPIOC_CRH as *const usize),
+            pa0: Pin::new(),
             pc13: Pin::new(),
         }
     }
 }
-
-// impl GPIO {
-//
-//
-//     fn bsrr<const PORT: char>()  -> Register  {
-//         Register(GPIOC_BSRR as *const usize)
-//     }
-//
-// }
