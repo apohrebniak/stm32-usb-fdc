@@ -6,6 +6,10 @@ const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
 
+pub struct PortA {}
+pub struct PortB {}
+pub struct PortC {}
+
 pub struct Input {}
 pub struct Output {}
 
@@ -23,14 +27,15 @@ trait PortAware {
     const BSRR: Register;
 }
 
-pub struct Pin<MODE, const PORT: char, const INDEX: u8> {
-    _marker: PhantomData<MODE>
+pub struct Pin<MODE, PORT, const INDEX: u8> {
+    _marker_mode: PhantomData<MODE>,
+    _marker_port: PhantomData<PORT>
 }
 
-impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
+impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX> {
 
     const fn new() -> Self {
-        Self { _marker: PhantomData }
+        Self { _marker_mode: PhantomData, _marker_port: PhantomData }
     }
 
     pub fn into_push_pull_output(self, cr: Register) -> Pin<Output, PORT, INDEX> {
@@ -43,7 +48,7 @@ impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
         let cr_offset: u32 = (4 * INDEX as u32) % 32;
 
         // reset pin
-        <Self as PortAware>::BSRR.write(1 << (16 + INDEX));
+        // <Self as PortAware>::BSRR.write(1 << (16 + INDEX));
 
         // clear previous configuration for this pin. then set the new one
         cr.write(cr.bits() & !(0b1111 << cr_offset) | BITS << cr_offset);
@@ -51,9 +56,13 @@ impl<MODE, const PORT: char, const INDEX: u8> Pin<MODE, PORT, INDEX> {
         Pin::new()
     }
 
+    pub fn into_intput(self) -> Pin<Input, PORT, INDEX> {
+        Pin::new()
+    }
+
 }
 
-impl<const PORT: char, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
+impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
     fn set_high(&mut self) {
         // self.bsrr().write(1 << INDEX);
     }
@@ -63,10 +72,16 @@ impl<const PORT: char, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX> {
     }
 }
 
+
+impl<MODE, const INDEX: u8> PortAware for Pin<MODE, PortC, INDEX> {
+    const BSRR: Register = Register(GPIOC_BSRR as *const usize);
+}
+
+
 pub struct GPIO {
     pub crl: Register,
     pub crh: Register,
-    pub pc13: Pin<Input, 'c', 13>,
+    pub pc13: Pin<Input, PortC, 13>,
 }
 
 impl GPIO {
@@ -77,10 +92,6 @@ impl GPIO {
             pc13: Pin::new(),
         }
     }
-}
-
-impl<MODE, const INDEX: u8> PortAware for Pin<MODE, 'c', INDEX> {
-    const BSRR: Register = Register(GPIOC_BSRR as *const usize);
 }
 
 // impl GPIO {

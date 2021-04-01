@@ -26,6 +26,8 @@ fn main() -> ! {
 
     let mut gpio = peripheral.GPIO;
     let mut pc13 = gpio.pc13.into_push_pull_output(gpio.crh);
+    let mut pc13 = pc13.into_intput();
+    let mut pc13 = pc13.into_push_pull_output(gpio.crh);
 
     loop {
         pc13.set_low();
