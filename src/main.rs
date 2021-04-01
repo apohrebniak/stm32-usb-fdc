@@ -1,8 +1,10 @@
+#![feature(const_generics)]
 #![no_std]
 #![no_main]
 
 use core::mem::replace;
 use core::panic::PanicInfo;
+use crate::peripheral::gpio::OutputPin;
 
 mod peripheral;
 mod startup;
@@ -22,8 +24,8 @@ fn main() -> ! {
     let mut peripheral = peripheral::take();
     peripheral.RCC.enable_io_c_clock();
 
-    let mut gpioc = peripheral.GPIOC;
-    let mut pc13 = gpioc.p13.into_push_pull_output(gpioc.crh);
+    let mut gpio = peripheral.GPIO;
+    let mut pc13 = gpio.pc13.into_push_pull_output(gpio.crh);
 
     loop {
         pc13.set_low();

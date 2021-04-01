@@ -21,7 +21,7 @@ const IOPBEN: u32 = 1 << 3;
 const IOPAEN: u32 = 1 << 2;
 
 /// Reset and clock control
-pub(crate) struct Rcc {
+pub struct Rcc {
     clk_ctrl: Register,
     clk_cfg: Register,
     clk_int: Register,
@@ -50,15 +50,15 @@ impl Rcc {
         }
     }
 
-    pub(crate) fn enable_io_c_clock(&mut self) {
+    pub fn enable_io_c_clock(&mut self) {
         self.apb2_clk_en.or(IOPCEN);
     }
 
-    pub(crate) fn enable_io_b_clock(&mut self) {
+    pub fn enable_io_b_clock(&mut self) {
         self.apb2_clk_en.or(IOPBEN);
     }
 
-    pub(crate) fn enable_io_a_clock(&mut self) {
+    pub fn enable_io_a_clock(&mut self) {
         self.apb2_clk_en.or(IOPAEN);
     }
 }
