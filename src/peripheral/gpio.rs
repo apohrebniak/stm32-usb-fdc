@@ -17,6 +17,7 @@ const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
 
+/// Maximum output speed
 pub enum OutputSpeed {
     Speed2MHz = 0b10,
     Speed10MHz = 0b01,
@@ -28,6 +29,7 @@ pub trait RegisterAware {
     const BSRR: Register;
 }
 
+// Marker types to indicate which CRL or CRH this pin corresponds to
 pub struct PortALow {}
 pub struct PortAHigh {}
 pub struct PortBLow {}
@@ -60,26 +62,30 @@ impl RegisterAware for PortCHigh {
     const BSRR: Register = Register(GPIOC_BSRR as *const usize);
 }
 
+// Marker types for pins in in/out mode
 pub struct Input {}
 pub struct Output {}
 
+/// Available actions for input pin
 pub trait InputPin {
     fn is_high(&self);
     fn is_low(&self);
 }
 
+/// Available actions for output pin
 pub trait OutputPin {
     fn set_high(&mut self);
     fn set_low(&mut self);
     fn set_speed(&mut self, speed: OutputSpeed);
 }
 
+/// Pin typed with it's IO mode, control register and index
 pub struct Pin<MODE, PORT, const INDEX: u8> {
     _marker_mode: PhantomData<MODE>,
     _marker_port: PhantomData<PORT>,
 }
 
-impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, INDEX>
+impl<MODE, PORT, const INDEX: u8> Pin<MODE, PORT, { INDEX }>
 where
     PORT: RegisterAware,
 {
@@ -90,60 +96,119 @@ where
         }
     }
 
-    pub fn into_push_pull_output(self) -> Pin<Output, PORT, INDEX> {
+    pub fn into_push_pull_output(self) -> Pin<Output, PORT, { INDEX }> {
         const CNF: u32 = 0b00;
         // default speed 2MHZ
         const MODE: u32 = 0b10;
-        // bits to set
-        const BITS: u32 = (CNF << 2) | MODE;
 
-        let cr_offset: u32 = (4 * INDEX as u32) % 32;
-
-        // reset pin
-        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
-
-        // clear previous configuration for this pin. then set the new one
-        <PORT as RegisterAware>::CR
-            .write(<PORT as RegisterAware>::CR.bits() & !(0b1111 << cr_offset) | BITS << cr_offset);
+        self.configure(CNF, MODE);
+        self.reset();
 
         Pin::new()
     }
 
-    pub fn into_open_drain_output(self) -> Pin<Output, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_open_drain_output(self) -> Pin<Output, PORT, { INDEX }> {
+        const CNF: u32 = 0b01;
+        // default speed 2MHZ
+        const MODE: u32 = 0b10;
+
+        self.configure(CNF, MODE);
+        self.reset();
+
+        Pin::new()
     }
 
-    pub fn into_alt_push_pull_output(self) -> Pin<Output, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_alt_push_pull_output(self) -> Pin<Output, PORT, { INDEX }> {
+        const CNF: u32 = 0b10;
+        // default speed 2MHZ
+        const MODE: u32 = 0b10;
+
+        self.configure(CNF, MODE);
+        self.reset();
+
+        Pin::new()
     }
 
-    pub fn into_alt_open_drain_output(self) -> Pin<Output, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_alt_open_drain_output(self) -> Pin<Output, PORT, { INDEX }> {
+        const CNF: u32 = 0b11;
+        // default speed 2MHZ
+        const MODE: u32 = 0b10;
+
+        self.configure(CNF, MODE);
+        self.reset();
+
+        Pin::new()
     }
 
-    pub fn into_floating_input(self) -> Pin<Input, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_floating_input(self) -> Pin<Input, PORT, { INDEX }> {
+        const CNF: u32 = 0b01;
+        // default speed 2MHZ
+        const MODE: u32 = 0b00;
+
+        self.configure(CNF, MODE);
+        self.reset();
+
+        Pin::new()
     }
 
-    pub fn into_pull_down_input(self) -> Pin<Input, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_pull_down_input(self) -> Pin<Input, PORT, { INDEX }> {
+        const CNF: u32 = 0b10;
+        // default speed 2MHZ
+        const MODE: u32 = 0b00;
+
+        self.configure(CNF, MODE);
+        self.reset();
+
+        Pin::new()
     }
 
-    pub fn into_pull_up_input(self) -> Pin<Input, PORT, INDEX> {
-        unimplemented!()
+    pub fn into_pull_up_input(self) -> Pin<Input, PORT, { INDEX }> {
+        const CNF: u32 = 0b10;
+        // default speed 2MHZ
+        const MODE: u32 = 0b00;
+
+        self.configure(CNF, MODE);
+        self.set();
+
+        Pin::new()
+    }
+
+    /// Set provided CNF and MODE
+    #[inline(always)]
+    fn configure(&self, cnf: u32, mode: u32) {
+        // bits to set
+        let bits: u32 = (cnf << 2) | mode;
+
+        let cr_offset: u32 = (4 * INDEX as u32) % 32;
+
+        // clear previous configuration for this pin. then set the new one
+        <PORT as RegisterAware>::CR
+            .write(<PORT as RegisterAware>::CR.bits() & !(0b1111 << cr_offset) | bits << cr_offset);
+    }
+
+    /// Set BSy as 1
+    #[inline(always)]
+    fn set(&self) {
+        <PORT as RegisterAware>::BSRR.write(1 << (INDEX));
+    }
+
+    /// Set BRy as 1
+    #[inline(always)]
+    fn reset(&self) {
+        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
     }
 }
 
-impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, INDEX>
+impl<PORT, const INDEX: u8> OutputPin for Pin<Output, PORT, { INDEX }>
 where
     PORT: RegisterAware,
 {
     fn set_high(&mut self) {
-        <PORT as RegisterAware>::BSRR.write(1 << INDEX);
+        self.set();
     }
 
     fn set_low(&mut self) {
-        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
+        self.reset();
     }
 
     fn set_speed(&mut self, speed: OutputSpeed) {
@@ -156,6 +221,19 @@ where
         <PORT as RegisterAware>::CR.write(
             <PORT as RegisterAware>::CR.bits() & !(0b11 << cr_offset) | (speed as u32) << cr_offset,
         );
+    }
+}
+
+impl<PORT, const INDEX: u8> InputPin for Pin<Output, PORT, { INDEX }>
+where
+    PORT: RegisterAware,
+{
+    fn is_high(&self) {
+        unimplemented!()
+    }
+
+    fn is_low(&self) {
+        unimplemented!()
     }
 }
 
