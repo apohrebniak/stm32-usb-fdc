@@ -3,7 +3,7 @@
 #![no_std]
 #![no_main]
 
-use crate::peripheral::gpio::OutputPin;
+use crate::peripheral::gpio::{OutputPin, OutputSpeed};
 use crate::peripheral::Register;
 use core::mem::replace;
 use core::panic::PanicInfo;
@@ -24,17 +24,21 @@ fn main() -> ! {
     peripheral.RCC.enable_io_c_clock();
 
     let mut gpio = peripheral.GPIO;
-    let mut pb0 = gpio.pb0.into_push_pull_output();
+    let mut pa2 = gpio.pa2.into_push_pull_output();
     let mut pa0 = gpio.pa0.into_push_pull_output();
     let mut pc13 = gpio.pc13.into_push_pull_output();
 
     let mut turn_on = true;
 
+    pa2.set_speed(OutputSpeed::Speed50MHz);
+    pa0.set_speed(OutputSpeed::Speed10MHz);
+    pc13.set_speed(OutputSpeed::Speed2MHz);
+
     loop {
         if turn_on {
-            pb0.set_high()
+            pa2.set_high()
         } else {
-            pb0.set_low()
+            pa2.set_low()
         };
         busy_wait(100000);
 
