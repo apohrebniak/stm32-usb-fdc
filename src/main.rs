@@ -3,7 +3,7 @@
 #![no_std]
 #![no_main]
 
-use crate::peripheral::gpio::{OutputPin, OutputSpeed};
+use crate::peripheral::gpio::{InputPin, OutputPin, OutputSpeed};
 use crate::peripheral::Register;
 use core::mem::replace;
 use core::panic::PanicInfo;
@@ -24,8 +24,9 @@ fn main() -> ! {
     peripheral.RCC.enable_io_c_clock();
 
     let mut gpio = peripheral.GPIO;
-    let mut pa2 = gpio.pa2.into_push_pull_output();
     let mut pa0 = gpio.pa0.into_push_pull_output();
+    let mut pa2 = gpio.pa2.into_push_pull_output();
+    let mut pa5 = gpio.pa5.into_pull_down_input();
     let mut pc13 = gpio.pc13.into_push_pull_output();
 
     let mut turn_on = true;
@@ -35,28 +36,30 @@ fn main() -> ! {
     pc13.set_speed(OutputSpeed::Speed2MHz);
 
     loop {
-        if turn_on {
-            pa2.set_high()
-        } else {
-            pa2.set_low()
-        };
-        busy_wait(100000);
+        if pa5.is_high() {
+            if turn_on {
+                pa2.set_high()
+            } else {
+                pa2.set_low()
+            };
+            busy_wait(100000);
 
-        if turn_on {
-            pa0.set_high()
-        } else {
-            pa0.set_low()
-        };
-        busy_wait(100000);
+            if turn_on {
+                pa0.set_high()
+            } else {
+                pa0.set_low()
+            };
+            busy_wait(100000);
 
-        if turn_on {
-            pc13.set_high()
-        } else {
-            pc13.set_low()
-        };
-        busy_wait(100000);
+            if turn_on {
+                pc13.set_high()
+            } else {
+                pc13.set_low()
+            };
+            busy_wait(100000);
 
-        turn_on = !turn_on;
+            turn_on = !turn_on;
+        }
     }
 }
 

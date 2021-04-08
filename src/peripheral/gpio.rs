@@ -6,16 +6,19 @@ const GPIOA_ORIGIN: usize = 0x40010800;
 const GPIOA_CRL: usize = GPIOA_ORIGIN;
 const GPIOA_CRH: usize = GPIOA_ORIGIN + 0x04;
 const GPIOA_BSRR: usize = GPIOA_ORIGIN + 0x10;
+const GPIOA_IDR: usize = GPIOA_ORIGIN + 0x08;
 
 const GPIOB_ORIGIN: usize = 0x40010C00;
 const GPIOB_CRL: usize = GPIOB_ORIGIN;
 const GPIOB_CRH: usize = GPIOB_ORIGIN + 0x04;
 const GPIOB_BSRR: usize = GPIOB_ORIGIN + 0x10;
+const GPIOB_IDR: usize = GPIOB_ORIGIN + 0x08;
 
 const GPIOC_ORIGIN: usize = 0x40011000;
 const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
+const GPIOC_IDR: usize = GPIOC_ORIGIN + 0x08;
 
 /// Maximum output speed
 pub enum OutputSpeed {
@@ -27,6 +30,7 @@ pub enum OutputSpeed {
 pub trait RegisterAware {
     const CR: Register;
     const BSRR: Register;
+    const IDR: Register;
 }
 
 // Marker types to indicate which CRL or CRH this pin corresponds to
@@ -40,26 +44,32 @@ pub struct PortCHigh {}
 impl RegisterAware for PortALow {
     const CR: Register = Register(GPIOA_CRL as *const usize);
     const BSRR: Register = Register(GPIOA_BSRR as *const usize);
+    const IDR: Register = Register(GPIOA_IDR as *const usize);
 }
 impl RegisterAware for PortAHigh {
     const CR: Register = Register(GPIOC_CRH as *const usize);
     const BSRR: Register = Register(GPIOA_BSRR as *const usize);
+    const IDR: Register = Register(GPIOA_IDR as *const usize);
 }
 impl RegisterAware for PortBLow {
     const CR: Register = Register(GPIOB_CRL as *const usize);
     const BSRR: Register = Register(GPIOB_BSRR as *const usize);
+    const IDR: Register = Register(GPIOB_IDR as *const usize);
 }
 impl RegisterAware for PortBHigh {
     const CR: Register = Register(GPIOB_CRH as *const usize);
     const BSRR: Register = Register(GPIOB_BSRR as *const usize);
+    const IDR: Register = Register(GPIOB_IDR as *const usize);
 }
 impl RegisterAware for PortCLow {
     const CR: Register = Register(GPIOC_CRL as *const usize);
     const BSRR: Register = Register(GPIOC_BSRR as *const usize);
+    const IDR: Register = Register(GPIOC_IDR as *const usize);
 }
 impl RegisterAware for PortCHigh {
     const CR: Register = Register(GPIOC_CRH as *const usize);
     const BSRR: Register = Register(GPIOC_BSRR as *const usize);
+    const IDR: Register = Register(GPIOC_IDR as *const usize);
 }
 
 // Marker types for pins in in/out mode
@@ -68,8 +78,8 @@ pub struct Output {}
 
 /// Available actions for input pin
 pub trait InputPin {
-    fn is_high(&self);
-    fn is_low(&self);
+    fn is_high(&self) -> bool;
+    fn is_low(&self) -> bool;
 }
 
 /// Available actions for output pin
@@ -224,16 +234,16 @@ where
     }
 }
 
-impl<PORT, const INDEX: u8> InputPin for Pin<Output, PORT, { INDEX }>
+impl<PORT, const INDEX: u8> InputPin for Pin<Input, PORT, { INDEX }>
 where
     PORT: RegisterAware,
 {
-    fn is_high(&self) {
-        unimplemented!()
+    fn is_high(&self) -> bool {
+        <PORT as RegisterAware>::IDR.bits() & (0b1 << INDEX) > 0
     }
 
-    fn is_low(&self) {
-        unimplemented!()
+    fn is_low(&self) -> bool {
+        <PORT as RegisterAware>::IDR.bits() & (0b1 << INDEX) == 0
     }
 }
 
