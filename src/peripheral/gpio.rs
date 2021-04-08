@@ -17,6 +17,12 @@ const GPIOC_CRL: usize = GPIOC_ORIGIN;
 const GPIOC_CRH: usize = GPIOC_ORIGIN + 0x04;
 const GPIOC_BSRR: usize = GPIOC_ORIGIN + 0x10;
 
+pub enum OutputSpeed {
+    Speed2MHz = 0b10,
+    Speed10MHz = 0b01,
+    Speed50MHz = 0b11,
+}
+
 pub trait RegisterAware {
     const CR: Register;
     const BSRR: Register;
@@ -65,6 +71,7 @@ pub trait InputPin {
 pub trait OutputPin {
     fn set_high(&mut self);
     fn set_low(&mut self);
+    fn set_speed(&mut self, speed: OutputSpeed);
 }
 
 pub struct Pin<MODE, PORT, const INDEX: u8> {
@@ -102,8 +109,28 @@ where
         Pin::new()
     }
 
-    pub fn into_intput(self) -> Pin<Input, PORT, INDEX> {
-        Pin::new()
+    pub fn into_open_drain_output(self) -> Pin<Output, PORT, INDEX> {
+        unimplemented!()
+    }
+
+    pub fn into_alt_push_pull_output(self) -> Pin<Output, PORT, INDEX> {
+        unimplemented!()
+    }
+
+    pub fn into_alt_open_drain_output(self) -> Pin<Output, PORT, INDEX> {
+        unimplemented!()
+    }
+
+    pub fn into_floating_input(self) -> Pin<Input, PORT, INDEX> {
+        unimplemented!()
+    }
+
+    pub fn into_pull_down_input(self) -> Pin<Input, PORT, INDEX> {
+        unimplemented!()
+    }
+
+    pub fn into_pull_up_input(self) -> Pin<Input, PORT, INDEX> {
+        unimplemented!()
     }
 }
 
@@ -117,6 +144,18 @@ where
 
     fn set_low(&mut self) {
         <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
+    }
+
+    fn set_speed(&mut self, speed: OutputSpeed) {
+        let cr_offset: u32 = (4 * INDEX as u32) % 32;
+
+        // reset pin
+        <PORT as RegisterAware>::BSRR.write(1 << (16 + INDEX));
+
+        // clear previous configuration for this pin. then set the new one
+        <PORT as RegisterAware>::CR.write(
+            <PORT as RegisterAware>::CR.bits() & !(0b11 << cr_offset) | (speed as u32) << cr_offset,
+        );
     }
 }
 
