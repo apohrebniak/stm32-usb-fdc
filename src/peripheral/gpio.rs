@@ -1,5 +1,6 @@
 use crate::peripheral::Register;
 use core::marker::PhantomData;
+use paste::paste;
 
 const GPIOA_ORIGIN: usize = 0x40010800;
 const GPIOA_CRL: usize = GPIOA_ORIGIN;
@@ -119,18 +120,41 @@ where
     }
 }
 
-pub struct GPIO {
-    pub pa0: Pin<Input, PortALow, 0>,
-    pub pb0: Pin<Input, PortBLow, 0>,
-    pub pc13: Pin<Input, PortCHigh, 13>,
-}
+// This macro creates a single GPIO struct with all pins from all ports
+// Pins are constructed with MCU's default configuration
+macro_rules! gpio {
+    ( $( ($letter:tt $port:ty [ $($num:tt)+ ]) )* ) => {
+        paste! {
+            pub struct GPIO {
+                $(
+                    $(
+                        pub [<p $letter $num>]: Pin<Input, $port, $num>,
+                    )*
+                )*
+            }
+        }
 
-impl GPIO {
-    pub(in crate::peripheral) const fn new() -> GPIO {
-        GPIO {
-            pa0: Pin::new(),
-            pb0: Pin::new(),
-            pc13: Pin::new(),
+        paste! {
+            impl GPIO {
+                pub(in crate::peripheral) const fn new() -> GPIO {
+                    GPIO {
+                        $(
+                            $(
+                                [<p $letter $num>]: Pin::new(),
+                            )*
+                        )*
+                    }
+                }
+            }
         }
     }
+}
+
+gpio! {
+    (a PortALow [0 1 2 3 4 5 6 7])
+    (a PortAHigh [8 9 10 11 12 13 14 15])
+    (b PortBLow [0 1 2 3 4 5 6 7])
+    (b PortBHigh [8 9 10 11 12 13 14 15])
+    (c PortCLow [0 1 2 3 4 5 6 7])
+    (c PortCHigh [8 9 10 11 12 13 14 15])
 }
