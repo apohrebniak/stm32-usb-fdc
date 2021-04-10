@@ -1,18 +1,20 @@
-2   PB12    /REDWC  Density Select                  1=Low/0=High
-8   PB13	/Index 	0=Index
-10  PB14	/MOTEA 	0=Motor Enable Drive 0			Low=Run/High=Stop
-12 	PB15	/DRVSB 	Drive Select 1
-14 	PA15	/DRVSA 	Drive Select 0
-16 	PA8	    /MOTEB 	0=Motor Enable Drive 1			Low=Run/High=Stop
-18 	PA9	    /DIR    0=Direction Select			    Low=In/Hight=Out
-20 	PA10	/Step   0=Head Step				        Impuls low to high
-22 	PA15	/WDATE 	Write Data
-24 	PB3	    /WGATE 	Floppy Write Enable, 0=Write Gate
-26 	PB4	    /TRK00 	0=Track 00
-28 	PB5	    /WPT    0=Write Protect
-30 	PB6	    /RDATA 	Read Data
-32 	PB7	    /SIDE1 	0=Head Select
-34 	PB8 	/DSKCHG 1=Disk Change/0=Ready
+PIN MCUPIN      NAME    FDWAY   DESC                                MCUIO
+
+2   pC13        /REDWC  IN      Density Select                      1=Low/0=High
+8   pC14	    /Index 	OUT     0=Index
+10  pC15	    /MOTEA 	IN      0=Motor Enable Drive 0			    Low=Run/High=Stop
+12 	pA0 	    /DRVSB 	IN      Drive Select 1                      Low=SELECT
+14 	pA1 	    /DRVSA 	IN      Drive Select 0                      Low=SELECT
+16 	pA2	        /MOTEB 	IN      0=Motor Enable Drive 1			    Low=Run/High=Stop
+18 	pA3	        /DIR    IN      0=Direction Select			        Low=In/Hight=Out
+20 	pA4	        /Step   IN      0=Head Step				            Impuls low to high
+22 	pA5 	    /WDATE 	IN      Write Data
+24 	pA6	        /WGATE 	IN      Floppy Write Enable, 0=Write Gate
+26 	pA7	        /TRK00 	OUT     0=Track 00
+28 	pB0	        /WPT    OUT     0=Write Protect
+30 	pB1	        /RDATA 	OUT     Read Data
+32 	pB10        /SIDE1 	IN      0=Head Select
+34 	pB11 	    /DSKCHG OUT     1=Disk Change/0=Ready
 
 
 
