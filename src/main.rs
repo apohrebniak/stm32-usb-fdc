@@ -24,41 +24,24 @@ fn main() -> ! {
     peripheral.RCC.enable_io_c_clock();
 
     let mut gpio = peripheral.GPIO;
-    let mut pa0 = gpio.pa0.into_push_pull_output();
-    let mut pa2 = gpio.pa2.into_push_pull_output();
-    let mut pa5 = gpio.pa5.into_pull_down_input();
-    let mut pc13 = gpio.pc13.into_push_pull_output();
 
-    let mut turn_on = true;
+    let mut debug_led_1 = gpio.pb8.into_push_pull_output();
+    let mut debug_led_2 = gpio.pb7.into_push_pull_output();
+    let mut debug_led_3 = gpio.pb6.into_push_pull_output();
 
-    pa2.set_speed(OutputSpeed::Speed50MHz);
-    pa0.set_speed(OutputSpeed::Speed10MHz);
-    pc13.set_speed(OutputSpeed::Speed2MHz);
+    let mut drive_select_b = gpio.pa0.into_push_pull_output();
+    let mut mot_enable_b = gpio.pa2.into_push_pull_output();
+
+    let mut index = gpio.pc14.into_pull_up_input();
+
+    drive_select_b.set_low(); //turn led on
+    mot_enable_b.set_low(); // spin motor
 
     loop {
-        if pa5.is_high() {
-            if turn_on {
-                pa2.set_high()
-            } else {
-                pa2.set_low()
-            };
-            busy_wait(100000);
-
-            if turn_on {
-                pa0.set_high()
-            } else {
-                pa0.set_low()
-            };
-            busy_wait(100000);
-
-            if turn_on {
-                pc13.set_high()
-            } else {
-                pc13.set_low()
-            };
-            busy_wait(100000);
-
-            turn_on = !turn_on;
+        if index.is_high() {
+            debug_led_1.set_low();
+        } else {
+            debug_led_1.set_high();
         }
     }
 }

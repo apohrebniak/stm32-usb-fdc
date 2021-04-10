@@ -47,10 +47,11 @@ impl RegisterAware for PortALow {
     const IDR: Register = Register(GPIOA_IDR as *const usize);
 }
 impl RegisterAware for PortAHigh {
-    const CR: Register = Register(GPIOC_CRH as *const usize);
+    const CR: Register = Register(GPIOA_CRH as *const usize);
     const BSRR: Register = Register(GPIOA_BSRR as *const usize);
     const IDR: Register = Register(GPIOA_IDR as *const usize);
 }
+
 impl RegisterAware for PortBLow {
     const CR: Register = Register(GPIOB_CRL as *const usize);
     const BSRR: Register = Register(GPIOB_BSRR as *const usize);
@@ -61,6 +62,7 @@ impl RegisterAware for PortBHigh {
     const BSRR: Register = Register(GPIOB_BSRR as *const usize);
     const IDR: Register = Register(GPIOB_IDR as *const usize);
 }
+
 impl RegisterAware for PortCLow {
     const CR: Register = Register(GPIOC_CRL as *const usize);
     const BSRR: Register = Register(GPIOC_BSRR as *const usize);
