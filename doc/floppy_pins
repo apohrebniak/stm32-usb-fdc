@@ -11,7 +11,7 @@
 9     22 	pA5 	    /WDATA 	IN      Write Data
 10    24 	pA6	        /WGATE 	IN      Floppy Write Enable, 0=Write Gate
 11    26 	pA7	        /TRK00 	OUT     0=Track 00
-12    28 	pB0	        /WPT    OUT     0=Write Protect
+12    28 	pB0	        /WPT    OUT     0=Write Protect                     Low=Write protected/High=Not write protected
 13    30 	pB1	        /RDATA 	OUT     Read Data
 14    32 	pB10        /SIDE1 	IN      0=Head Select
 15    34 	pB11 	    /DSKCHG OUT     1=Disk Change/0=Ready
