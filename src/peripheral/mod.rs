@@ -10,7 +10,7 @@ static mut PERIPHERAL: Option<Peripheral> = Some(Peripheral::new());
 
 /// Wrapper around a memory location
 #[derive(Copy, Clone)]
-pub struct Register(*const usize);
+pub struct Register(*const usize); //TODO: change to u32
 
 impl Register {
     /// Combines the "val" with the existing value using OR

@@ -20,6 +20,10 @@ const IOPCEN: u32 = 1 << 4;
 const IOPBEN: u32 = 1 << 3;
 const IOPAEN: u32 = 1 << 2;
 
+const USART1EN: u32 = 1 << 14;
+
+const AFIOEN: u32 = 1 << 0;
+
 /// Reset and clock control
 pub struct Rcc {
     clk_ctrl: Register,
@@ -50,15 +54,28 @@ impl Rcc {
         }
     }
 
-    pub fn enable_io_c_clock(&mut self) {
+    pub fn enable_io_c_clock(&mut self) -> &mut Self {
         self.apb2_clk_en.or(IOPCEN);
+        self
     }
 
-    pub fn enable_io_b_clock(&mut self) {
+    pub fn enable_io_b_clock(&mut self) -> &mut Self {
         self.apb2_clk_en.or(IOPBEN);
+        self
     }
 
-    pub fn enable_io_a_clock(&mut self) {
+    pub fn enable_io_a_clock(&mut self) -> &mut Self  {
         self.apb2_clk_en.or(IOPAEN);
+        self
+    }
+
+    pub fn enable_io_alt_clock(&mut self) -> &mut Self {
+        self.apb2_clk_en.or(AFIOEN);
+        self
+    }
+
+    pub fn enable_usart_1_clock(&mut self) -> &mut Self {
+        self.apb2_clk_en.or(USART1EN);
+        self
     }
 }
