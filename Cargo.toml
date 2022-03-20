@@ -1,5 +1,5 @@
 [package]
-name = "stm32-usb-floppy-drive"
+name = "stm32-usb-fdc"
 version = "0.1.0"
 authors = ["Andrii Pohrebniak <andrii.pohrebniak@gmail.com>"]
 edition = "2021"
