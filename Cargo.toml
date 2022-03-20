@@ -1,13 +1,35 @@
 [package]
-name = "stm32-floppy-controller"
+name = "stm32-usb-floppy-drive"
 version = "0.1.0"
 authors = ["Andrii Pohrebniak <andrii.pohrebniak@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[profile.dev]
-opt-level = 0
-debug = false
 
-[dependencies]
-paste = "1.0.5"
+[[bin]]
+name = "firmware"
+path = "src/main.rs"
+test = false
+bench = false
+
+# implicitly adds a small #[panic_handler] function
+[dependencies.panic-abort]
+version = "0.3.2"
+
+# base runtime configuration for cortex m
+[dependencies.cortex-m-rt]
+version = "0.7.1"
+
+# access to core peripherals
+[dependencies.cortex-m]
+version = "0.7.4"
+
+# embedded_hal implementation for stm32fxx
+# "stm32f411" feature brings the "device crate"
+# https://docs.rs/cortex-m-rt/latest/cortex_m_rt/#device
+[dependencies.stm32f4xx-hal]
+version = "0.12.0"
+features = ["stm32f411", "rt"]
+
+[dependencies.stm32f4]
+version = "0.14.0"

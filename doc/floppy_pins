@@ -1,20 +1,20 @@
 #    PIN    MCUPIN      NAME    FDWAY   DESC                                MCUIO
 
-1     2     pC13        /REDWC  IN      Density Select                      1=Low/0=High
-2     8     pC14	    /Index 	OUT     0=Index
-3     10    pC15	    /MOTEA 	IN      0=Motor Enable Drive A			    Low=Run/High=Stop
-4     12 	pA0 	    /DRVSB 	IN      Drive Select B                      Low=SELECT
-5     14 	pA1 	    /DRVSA 	IN      Drive Select A                      Low=SELECT
-6     16 	pA2	        /MOTEB 	IN      0=Motor Enable Drive B			    Low=Run/High=Stop
-7     18 	pA3	        /DIR    IN      0=Direction Select			        Low=In/Hight=Out
-8     20 	pA4	        /Step   IN      0=Head Step				            Impuls low to high
-9     22 	pA5 	    /WDATA 	IN      Write Data
-10    24 	pA6	        /WGATE 	IN      Floppy Write Enable, 0=Write Gate
-11    26 	pA7	        /TRK00 	OUT     0=Track 00
-12    28 	pB0	        /WPT    OUT     0=Write Protect                     Low=Write protected/High=Not write protected
-13    30 	pB1	        /RDATA 	OUT     Read Data
-14    32 	pB10        /SIDE1 	IN      0=Head Select
-15    34 	pB11 	    /DSKCHG OUT     1=Disk Change/0=Ready
+1     2     PB10        /REDWC  IN      Density Select                      1=Low/0=High
+2     8     PB2 	    /Index 	OUT     0=Index
+3     10    PB1 	    /MOTEA 	IN      0=Motor Enable Drive A			    Low=Run/High=Stop
+4     12 	PB0 	    /DRVSB 	IN      Drive Select B                      Low=SELECT
+5     14 	PA7 	    /DRVSA 	IN      Drive Select A                      Low=SELECT
+6     16 	PA6	        /MOTEB 	IN      0=Motor Enable Drive B			    Low=Run/High=Stop
+7     18 	PA5	        /DIR    IN      0=Direction Select			        Low=In/Hight=Out
+8     20 	PA4	        /Step   IN      0=Head Step				            Impuls low to high
+9     22 	PA3 	    /WDATA 	IN      Write Data
+10    24 	PA2	        /WGATE 	IN      Floppy Write Enable, 0=Write Gate
+11    26 	PA1	        /TRK00 	OUT     0=Track 00
+12    28 	PA0	        /WPT    OUT     0=Write Protect                     Low=Write protected/High=Not write protected
+13    30 	PC15        /RDATA 	OUT     Read Data
+14    32 	PC14        /SIDE1 	IN      0=Head Select
+15    34 	PC13 	    /DSKCHG OUT     0=Disk Change/1=Ready
 
 
 
