@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-    "stm32-usb-fdc"
+    "stm32-usb-fdc", # controller firmware
+    "usbd-ms" # USB Mass Storage implementation
 ]

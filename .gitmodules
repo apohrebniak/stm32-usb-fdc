@@ -1,0 +1,3 @@
+[submodule "usbd-ms"]
+	path = usbd-ms
+	url = git@github.com:apohrebniak/usbd-ms.git

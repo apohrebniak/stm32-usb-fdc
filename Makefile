@@ -1,8 +1,4 @@
 build:
-	cargo build
-	arm-none-eabi-objcopy -O binary target/thumbv7em-none-eabihf/debug/firmware target/firmware.bin
-
-release:
 	cargo build --release
 	arm-none-eabi-objcopy -O binary target/thumbv7em-none-eabihf/release/firmware target/firmware.bin
 

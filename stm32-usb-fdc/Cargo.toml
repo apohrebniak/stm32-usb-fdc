@@ -26,10 +26,24 @@ version = "0.7.4"
 
 # embedded_hal implementation for stm32fxx
 # "stm32f411" feature brings the "device crate"
+# "usb_fs" enables OTG peripheral access
 # https://docs.rs/cortex-m-rt/latest/cortex_m_rt/#device
 [dependencies.stm32f4xx-hal]
 version = "0.12.0"
-features = ["stm32f411", "rt"]
+features = ["stm32f411", "rt", "usb_fs"]
 
+# peripheral-access crate
 [dependencies.stm32f4]
 version = "0.14.0"
+
+# USB device traits
+[dependencies.usb-device]
+version = "0.2.8"
+
+# USB implementation
+[dependencies.usbd-ms]
+path = "../usbd-ms"
+
+#TODO: temporal dependency
+[dependencies.usbd-serial]
+version = "0.1.1"

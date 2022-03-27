@@ -2,61 +2,87 @@
 #![no_main]
 
 use panic_abort as _;
-use stm32f4xx_hal::gpio::{GpioExt, Output, Pin, PinState, PushPull};
+use stm32f4xx_hal::gpio::GpioExt;
+use stm32f4xx_hal::otg_fs::UsbBus;
 use stm32f4xx_hal::pac;
+use stm32f4xx_hal::prelude::*;
 use stm32f4xx_hal::rcc::RccExt;
+use usb_device::prelude::*;
+
+static mut USB_EP_MEMORY: [u32; 1024] = [0u32; 1024];
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
     // take core peripherals
-    let _cp = cortex_m::Peripherals::take().unwrap();
+    let cp = cortex_m::Peripherals::take().unwrap();
     // take device-specific peripherals
     let dp = pac::Peripherals::take().unwrap();
 
     // setup clocks
     let rcc = dp.RCC.constrain();
-    let _clocks = rcc.cfgr.freeze();
+    let clocks = rcc
+        .cfgr
+        .use_hse(25.MHz()) // 25Mhz HSE is present on the board
+        .sysclk(48.MHz())
+        .require_pll48clk()
+        .freeze();
 
-    // configure GPIO
-    let gpio_a = dp.GPIOA.split();
-    let gpio_b = dp.GPIOB.split();
-    let gpio_c = dp.GPIOC.split();
+    // setup GPIO
+    let gpioa = dp.GPIOA.split();
+    let mut pin_usb_dm = gpioa.pa11.into_push_pull_output();
+    let mut pin_usb_dp = gpioa.pa12.into_push_pull_output();
 
-    let mut pin_dbg_1 = gpio_a.pa15.into_push_pull_output_in_state(PinState::Low);
-    let pin_dbg_btn = gpio_b.pb8.into_pull_down_input();
+    // force D+ for 100ms
+    // this will force the host to enumerate devices
+    pin_usb_dm.set_low();
+    pin_usb_dp.set_low();
+    cp.SYST.delay(&clocks).delay_ms(100u32);
 
-    cortex_m::asm::delay(10_000_000);
+    let usb_peripheral = stm32f4xx_hal::otg_fs::USB {
+        usb_global: dp.OTG_FS_GLOBAL,
+        usb_device: dp.OTG_FS_DEVICE,
+        usb_pwrclk: dp.OTG_FS_PWRCLK,
+        pin_dm: pin_usb_dm.into_alternate(),
+        pin_dp: pin_usb_dp.into_alternate(),
+        hclk: clocks.hclk(),
+    };
 
-    let mut pin_drive_select_b = gpio_b.pb0.into_push_pull_output_in_state(PinState::High); // not select
-    let mut pin_motor_en_b = gpio_a.pa6.into_push_pull_output_in_state(PinState::High); // not spin
-    let pin_ready = gpio_c.pc13.into_pull_up_input();
-    let _pin_index = gpio_b.pb2.into_pull_up_input();
-    // let pin_track_zero = gpio_a.pa1.into_pull_down_input();
-    // let mut pin_head_step = gpio_a.pa4.into_push_pull_output_in_state(PinState::Low);
-    // let mut pin_dir_select = gpio_a.pa5.into_push_pull_output_in_state(PinState::High); // out
-    // let pin_write_protect = gpio_a.pa0.into_pull_down_input();
+    let usb_bus = UsbBus::new(usb_peripheral, unsafe { &mut USB_EP_MEMORY });
 
-    cortex_m::asm::delay(50_000_000);
+    let mut usb_serial = usbd_serial::SerialPort::new(&usb_bus);
+
+    let mut usb_device = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0xabcd, 0xabcd))
+        .manufacturer("Foo Bar")
+        .product("STM32 USB Floppy")
+        .build();
 
     loop {
-        if pin_dbg_btn.is_high() {
-            pin_drive_select_b.set_low(); // select
-            pin_motor_en_b.set_low(); // start spin
-        } else {
-            pin_drive_select_b.set_high(); // not select
-            pin_motor_en_b.set_high(); // stop spin
+        if !usb_device.poll(&mut [&mut usb_serial]) {
+            continue;
         }
 
-        if pin_ready.is_low() {
-            pin_dbg_1.set_high();
-        } else {
-            pin_dbg_1.set_low();
+        let mut buf = [0u8; 64];
+
+        match usb_serial.read(&mut buf) {
+            Ok(count) if count > 0 => {
+                // Echo back in upper case
+                for c in buf[0..count].iter_mut() {
+                    if 0x61 <= *c && *c <= 0x7a {
+                        *c &= !0x20;
+                    }
+                }
+
+                let mut write_offset = 0;
+                while write_offset < count {
+                    match usb_serial.write(&buf[write_offset..count]) {
+                        Ok(len) if len > 0 => {
+                            write_offset += len;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
         }
     }
-}
-
-fn head_step(pin: &mut Pin<Output<PushPull>, 'A', 4>) {
-    pin.toggle();
-    cortex_m::asm::delay(1_000_000);
-    pin.toggle();
 }
