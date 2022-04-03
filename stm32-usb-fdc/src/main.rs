@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use panic_abort as _;
+use rtt_target::{rprintln, rtt_init_print};
 use stm32f4xx_hal::gpio::GpioExt;
 use stm32f4xx_hal::otg_fs::UsbBus;
 use stm32f4xx_hal::pac;
@@ -11,8 +11,17 @@ use usb_device::prelude::*;
 
 static mut USB_EP_MEMORY: [u32; 1024] = [0u32; 1024];
 
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    rtt_target::rprintln!("{}", info);
+    loop {}
+}
+
 #[cortex_m_rt::entry]
 fn main() -> ! {
+    rtt_init_print!();
+    rprintln!("Started...");
+
     // take core peripherals
     let cp = cortex_m::Peripherals::take().unwrap();
     // take device-specific peripherals
@@ -49,7 +58,7 @@ fn main() -> ! {
 
     let usb_bus = UsbBus::new(usb_peripheral, unsafe { &mut USB_EP_MEMORY });
 
-    let mut usb_serial = usbd_serial::SerialPort::new(&usb_bus);
+    let mut usb_storage = usbd_ms::UfiCbiWithCciClass::new(&usb_bus);
 
     let mut usb_device = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0xabcd, 0xabcd))
         .manufacturer("Foo Bar")
@@ -57,32 +66,8 @@ fn main() -> ! {
         .build();
 
     loop {
-        if !usb_device.poll(&mut [&mut usb_serial]) {
+        if !usb_device.poll(&mut [&mut usb_storage]) {
             continue;
-        }
-
-        let mut buf = [0u8; 64];
-
-        match usb_serial.read(&mut buf) {
-            Ok(count) if count > 0 => {
-                // Echo back in upper case
-                for c in buf[0..count].iter_mut() {
-                    if 0x61 <= *c && *c <= 0x7a {
-                        *c &= !0x20;
-                    }
-                }
-
-                let mut write_offset = 0;
-                while write_offset < count {
-                    match usb_serial.write(&buf[write_offset..count]) {
-                        Ok(len) if len > 0 => {
-                            write_offset += len;
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            _ => {}
         }
     }
 }
