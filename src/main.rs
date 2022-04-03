@@ -58,7 +58,7 @@ fn main() -> ! {
 
     let usb_bus = UsbBus::new(usb_peripheral, unsafe { &mut USB_EP_MEMORY });
 
-    let mut usb_storage = usbd_ms::UfiCbiWithCciClass::new(&usb_bus);
+    let mut usb_storage = usbd_storage::UfiCbiWithCciClass::new(&usb_bus);
 
     let mut usb_device = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0xabcd, 0xabcd))
         .manufacturer("Foo Bar")

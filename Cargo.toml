@@ -1,6 +1,46 @@
-[workspace]
+[package]
+name = "stm32-usb-fdc"
+version = "0.1.0"
+authors = ["Andrii Pohrebniak <andrii.pohrebniak@gmail.com>"]
+edition = "2021"
 
-members = [
-    "stm32-usb-fdc", # controller firmware
-    "usbd-ms" # USB Mass Storage implementation
-]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "firmware"
+path = "src/main.rs"
+test = false
+bench = false
+
+# base runtime configuration for cortex m
+[dependencies.cortex-m-rt]
+version = "0.7.1"
+
+# access to core peripherals
+[dependencies.cortex-m]
+version = "0.7.4"
+
+# embedded_hal implementation for stm32fxx
+# "stm32f411" feature brings the "device crate"
+# "usb_fs" enables OTG peripheral access
+# https://docs.rs/cortex-m-rt/latest/cortex_m_rt/#device
+[dependencies.stm32f4xx-hal]
+version = "0.12.0"
+features = ["stm32f411", "rt", "usb_fs"]
+
+# peripheral-access crate
+[dependencies.stm32f4]
+version = "0.14.0"
+
+# USB device traits
+[dependencies.usb-device]
+version = "0.2.8"
+
+# USB implementation
+[dependencies.usbd-storage]
+path = "usbd-storage"
+
+# printing messages
+[dependencies.rtt-target]
+version = "0.3.1"
+features = ["cortex-m"]
